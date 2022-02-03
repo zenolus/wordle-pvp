@@ -12,13 +12,15 @@ const keySet = [
 const isAlpha = ch => 
 	(typeof ch === "string") && (ch.length === 1) && (((ch >= "a") && (ch <= "z")) || ((ch >= "A") && (ch <= "Z")))
 
+const getCharCode = s => s.charCodeAt(0)
+
 class Game extends React.Component {
 	constructor(props) {
 		super(props)
 		this.state = {
 			guesses: props.guesses ?? Array(6).fill(Array(5).fill('')),
 			tileCheck: props.tileCheck ?? Array(6).fill(Array(5).fill('')),
-			keyCheck: props.keyCheck ?? Array(3).fill(Array(10).fill('')),
+			keyCheck: Array(26).fill(""),
 			rowIndex: 0,
 			colIndex: -1,
 			rowShake: false,
@@ -28,7 +30,24 @@ class Game extends React.Component {
 	componentDidMount(){
 		document.addEventListener("keydown", this.handleKeyPress)
 		this.props.socket.on("invalid guess", this.handleShake)
-		// this.props.socket.on("valid guess", this.handleShake)
+		this.props.socket.on("result", result => {
+			var {tileCheck, keyCheck, guesses, rowIndex, gameOver} = {...this.state};
+			gameOver = result.reduce((acc, cur) => acc &= (cur === 'correct'), true) || rowIndex === 6
+			for(var i = 0; i < 5; i++){
+				const charCode = getCharCode(`${guesses[rowIndex][i]}`.toUpperCase()) - getCharCode('A');
+				if((keyCheck[charCode] === "") || (keyCheck[charCode] === 'present' && result[i] === 'correct'))
+					keyCheck[charCode] = result[i]
+			}
+			tileCheck[rowIndex++] = result;
+			this.setState({
+				guesses,
+				tileCheck,
+				keyCheck,
+				colIndex: -1,
+				rowIndex,
+				gameOver
+			})
+		})
 	}
 	handleShake = () => {
 		this.setState({rowShake: true});
@@ -66,14 +85,15 @@ class Game extends React.Component {
 								)}
 							</div>
 						))}
-						{/* <input type = "text" hidden onKeyPress={ e => this.handleKeyPress(e) } /> */}
 					</div>
 				</div>
 				<div className='keyboard'>
 					{keySet.map((keyRow, row) => 
 						<div key = {row} className="key-row">
 							{keyRow.map((key, col) => 
-								<button key = {[row, col]} className={`key ${this.state.keyCheck[row][col]}`}
+								<button
+									key = {[row, col]}
+									className={`key ${(key.length > 1) ? '' : this.state.keyCheck[getCharCode(key) - getCharCode('A')]}`}
 									style={{maxWidth: key.length > 1 ? '60px' : '40px'}}
 									onClick={() => this.handleKeyPress({key})}
 								>{key !== 'Backspace' ? key :
