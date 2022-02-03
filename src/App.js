@@ -6,12 +6,7 @@ import React from 'react';
 import Game from './Game'
 
 class App extends React.Component {
-	constructor(props){
-		super(props);
-		this.state = {
-			showHelp: false
-		}
-	}
+	state = { showHelp: false }
 	handleHelpToggle = () => this.setState({showHelp: !this.state.showHelp})
 	render() {
 		return (

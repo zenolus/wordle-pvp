@@ -1,6 +1,7 @@
 import React from "react";
 import { IconContext } from "react-icons";
 import { MdOutlineBackspace } from 'react-icons/md'
+import { withSocket } from "./socket";
 
 const keySet = [
 	['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
@@ -26,6 +27,12 @@ class Game extends React.Component {
 	}
 	componentDidMount(){
 		document.addEventListener("keydown", this.handleKeyPress)
+		this.props.socket.on("invalid guess", this.handleShake)
+		// this.props.socket.on("valid guess", this.handleShake)
+	}
+	handleShake = () => {
+		this.setState({rowShake: true});
+		setTimeout(() => this.setState({rowShake: false}), 250);
 	}
 	handleKeyPress = e => {
 		if(this.state.gameOver)	return;
@@ -36,13 +43,9 @@ class Game extends React.Component {
 			newGuesses[rowIndex][colIndex--] = '';
 			this.setState({guesses: newGuesses, colIndex});
 		} else if(e.key === "Enter") {
-			if(colIndex !== 4){
-				this.setState({rowShake: true});
-				setTimeout(() => this.setState({rowShake: false}), 250);
-				return;
-			}
-			// Send to socket for check
-			console.log(newGuesses[rowIndex].join(''))
+			if(colIndex !== 4)	return this.handleShake()
+			const guess = newGuesses[rowIndex].join('');
+			this.props.socket.emit("evaluate", guess)
 		} else {
 			if(colIndex === 4)	return;
 			if(!isAlpha(e.key))	return;
@@ -57,9 +60,9 @@ class Game extends React.Component {
 				<div className='board-container'>
 					<div className='board'>
 						{this.state.guesses.map((guess, row) => (
-							<div className={`grid-row ${(this.state.rowShake && row === this.state.rowIndex) ? "shake" : ""}`}>
+							<div key = {row} className={`grid-row ${(this.state.rowShake && row === this.state.rowIndex) ? "shake" : ""}`}>
 								{guess.map((letter, col) => 
-									<div className={`grid-tile ${this.state.tileCheck[row][col]}`}>{letter}</div> 
+									<div key = {[row, col]} className={`grid-tile ${this.state.tileCheck[row][col]}`}>{letter}</div> 
 								)}
 							</div>
 						))}
@@ -68,9 +71,9 @@ class Game extends React.Component {
 				</div>
 				<div className='keyboard'>
 					{keySet.map((keyRow, row) => 
-						<div className="key-row">
+						<div key = {row} className="key-row">
 							{keyRow.map((key, col) => 
-								<button className={`key ${this.state.keyCheck[row][col]}`}
+								<button key = {[row, col]} className={`key ${this.state.keyCheck[row][col]}`}
 									style={{maxWidth: key.length > 1 ? '60px' : '40px'}}
 									onClick={() => this.handleKeyPress({key})}
 								>{key !== 'Backspace' ? key :
@@ -85,4 +88,4 @@ class Game extends React.Component {
 	}
 }
 
-export default Game
+export default withSocket(Game)
