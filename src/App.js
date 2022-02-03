@@ -1,5 +1,6 @@
 import './App.css';
 import { FaRegQuestionCircle } from 'react-icons/fa'
+import { AiFillCloseCircle } from 'react-icons/ai'
 import { IconContext } from 'react-icons'
 import React from 'react';
 import Game from './Game'
@@ -19,7 +20,9 @@ class App extends React.Component {
 					<div className= "title">WORDLE PvP</div>
 					<div className= "help">
 						<IconContext.Provider value = {{ size: "1.5em" }}>
-							<FaRegQuestionCircle style = {{cursor: 'pointer'}} onClick = {this.handleHelpToggle} />
+							<span style = {{cursor: 'pointer'}} onClick = {this.handleHelpToggle} >
+								{this.state.showHelp ? <AiFillCloseCircle /> :<FaRegQuestionCircle/>}
+							</span>
 						</IconContext.Provider>
 					</div>
 				</header>
