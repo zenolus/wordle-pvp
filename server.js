@@ -36,5 +36,5 @@ io.on("connection", socket => {
 
 app.get('/', (req, res) => res.send("Service running", words.length))
 
-httpServer.listen(port, () => console.log("Service started!", words.length))
+httpServer.listen(process.env.PORT || port, () => console.log("Service started!", words.length))
 
