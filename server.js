@@ -34,7 +34,7 @@ io.on("connection", socket => {
 	})
 })
 
-app.get('/', (req, res) => res.json({wordCount: words.length})
+app.get('/', (req, res) => res.json({wordCount: words.length}))
 
 httpServer.listen(process.env.PORT || port, () => console.log("Service started!", words.length))
 
